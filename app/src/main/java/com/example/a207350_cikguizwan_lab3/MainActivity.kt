@@ -70,6 +70,12 @@ fun NavigationApp(viewModel: HealthViewModel) {
         composable("details") {
             DetailScreen(navController = navController, viewModel = viewModel)
         }
+        composable("add") {
+            AddScreen(navController = navController, viewModel = viewModel)
+        }
+        composable("list") {
+            ListScreen(navController = navController, viewModel = viewModel)
+        }
     }
 }
 
@@ -90,6 +96,12 @@ fun HomeScreen(navController: NavHostController, viewModel: HealthViewModel) {
         },
         onDetailClick = {
             navController.navigate("details")
+        },
+        onAddClick = {
+            navController.navigate("add")
+        },
+        onListClick = {
+            navController.navigate("list")
         }
     )
 }
@@ -100,7 +112,9 @@ fun HealthDashboardUI(
     steps: Int,
     onUpdateClick: (String, String) -> Unit,
     onOpenProfileClick: () -> Unit,
-    onDetailClick: () -> Unit
+    onDetailClick: () -> Unit,
+    onAddClick: () -> Unit,
+    onListClick: () -> Unit
 ) {
     var nameInput by remember { mutableStateOf(displayName) }
     var stepsInput by remember { mutableStateOf(steps.toString()) }
@@ -209,6 +223,24 @@ fun HealthDashboardUI(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text("Open Profile Screen")
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                OutlinedButton(
+                    onClick = onAddClick,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Add Activity Screen")
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                OutlinedButton(
+                    onClick = onListClick,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Activity List Screen")
                 }
             }
         }
@@ -521,6 +553,151 @@ fun DetailScreen(navController: NavHostController, viewModel: HealthViewModel) {
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("Back to Home")
+        }
+    }
+}
+
+@Composable
+fun AddScreen(navController: NavHostController, viewModel: HealthViewModel) {
+    var title by remember { mutableStateOf("") }
+    var steps by remember { mutableStateOf("") }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(20.dp)
+            .verticalScroll(rememberScrollState())
+    ) {
+        Text(
+            "Add Activity Screen",
+            style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.primary,
+            fontWeight = FontWeight.Bold
+        )
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        Card(
+            shape = RoundedCornerShape(20.dp),
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text("Create New Activity", fontWeight = FontWeight.Bold)
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                OutlinedTextField(
+                    value = title,
+                    onValueChange = { title = it },
+                    label = { Text("Activity Title") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                OutlinedTextField(
+                    value = steps,
+                    onValueChange = { steps = it },
+                    label = { Text("Steps") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Button(
+                    onClick = {
+                        val stepValue = steps.toIntOrNull() ?: 0
+                        viewModel.addActivity(title, stepValue)
+                        navController.popBackStack()
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Save Activity")
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                OutlinedButton(
+                    onClick = { navController.popBackStack() },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Back")
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ListScreen(navController: NavHostController, viewModel: HealthViewModel) {
+    val list by viewModel.activityList.collectAsState()
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(20.dp)
+            .verticalScroll(rememberScrollState())
+    ) {
+        Text(
+            "Activity List Screen",
+            style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.primary,
+            fontWeight = FontWeight.Bold
+        )
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        Card(
+            shape = RoundedCornerShape(20.dp),
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text("Saved Activities", fontWeight = FontWeight.Bold)
+                Spacer(modifier = Modifier.height(8.dp))
+                Text("Total Items: ${list.size}")
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        if (list.isEmpty()) {
+            Card(
+                shape = RoundedCornerShape(20.dp),
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text("No activities added yet.")
+                    Text("Go to Add Activity Screen to create one.")
+                }
+            }
+        } else {
+            list.forEachIndexed { index, item ->
+                Spacer(modifier = Modifier.height(10.dp))
+                Card(
+                    shape = RoundedCornerShape(20.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text("Item ${index + 1}", fontWeight = FontWeight.Bold)
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text("Title: ${item.title}")
+                        Text("Steps: ${item.steps}")
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        Button(
+            onClick = { navController.popBackStack() },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Back")
         }
     }
 }
